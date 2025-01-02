@@ -2,8 +2,8 @@ from problem import Problem
 import numpy as np
 
 class MinimumVertexCoverVertices(Problem):
-    def __init__(self, choice, getChoiceParameters):
-        super().__init__(choice, getChoiceParameters)
+    def __init__(self, choice, choiceParameters):
+        super().__init__(choice, choiceParameters)
 
     def get_current_embedding(self, *params):
         map, _ = params
@@ -19,6 +19,7 @@ class MinimumVertexCoverVertices(Problem):
 
     def run(self, graph):
         self.reset_embeddings()
+        self.choiceParameters.reset_state()
 
         n = len(graph)
         nodes = [i for i in range(n)]

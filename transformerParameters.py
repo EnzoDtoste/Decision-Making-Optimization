@@ -3,37 +3,29 @@ from transformer import TransformerModel, train, evaluate
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-class TransformerParametersSequential(ChoiceParameters):
-    def __init__(self):
+class TransformerParameters(ChoiceParameters):
+    def __init__(self, dmodel=128, nhead=8, num_layers=2):
+        super().__init__()
         self.model_size = 128
-        self.model = TransformerModel(d_model=128, nhead=8, num_layers=2)
-        self.state = None
-        self.separator = 110901
+        self.model = TransformerModel(d_model=dmodel, nhead=nhead, num_layers=num_layers)
+
+    def get_state_after_embedding(self, embedding):
+        pass
+
+    def get_state_for_list(self, list_embedding):
+        pass
 
     def __call__(self, embedding):
-        if self.state is None:
-            self.state = embedding.flatten()
-        else:
-            np.concatenate((self.state, np.array([self.separator]), embedding.flatten()))
+        return evaluate(self.model, [self.get_state_after_embedding(embedding).flatten()])[0]
 
-        return evaluate(self.model, [self.state])[0]
-    
     def prepare_data(self, X):
         newX = []
 
         for sequence in X:
-            joined = None
-
-            for embedding in sequence:
-                if joined is None:
-                    joined = embedding.flatten()
-                else:
-                    np.concatenate((joined, np.array([self.separator]), embedding.flatten()))
-
-            newX.append(joined)
+            newX.append(self.get_state_for_list(sequence).flatten())
 
         return newX
-
+    
     def train(self, X, Y):
         X = self.prepare_data(X)
 
@@ -41,4 +33,66 @@ class TransformerParametersSequential(ChoiceParameters):
         train(self.model, X_train, Y_train)
 
         return evaluate(self.model, X_test, Y_test)
+
+class TransformerParametersSequential(TransformerParameters):
+    def __init__(self, dmodel=128, nhead=8, num_layers=2):
+        super().__init__(dmodel, nhead, num_layers)
+        self.state = None
+        self.separator = 110901
+
+    def reset_state(self):
+        self.state = None
+
+    def get_state_after_embedding(self, embedding):
+        if self.state is None:
+            self.state = embedding.flatten()
+        else:
+            self.state = np.concatenate((self.state, np.array([self.separator]), embedding.flatten()))
+
+        return self.state
+
+    def get_state_for_list(self, list_embedding):
+        joined = None
+
+        for embedding in list_embedding:
+            if joined is None:
+                joined = embedding.flatten()
+            else:
+                joined = np.concatenate((joined, np.array([self.separator]), embedding.flatten()))
+
+        return joined
+            
+
+class TransformerParametersSVD(TransformerParameters):
+    def __init__(self, n_componentes=None, dmodel=128, nhead=8, num_layers=2):
+        super().__init__(dmodel, nhead, num_layers)
+        self.state = []
+        self.n_components = n_componentes
+
+    def reset_state(self):
+        self.state = []
+
+    def get_state_for_list(self, list_embedding):
+        return self.reduced_embeddings([e.flatten() for e in list_embedding])
         
+    def get_state_after_embedding(self, embedding):
+        self.state.append(embedding.flatten())
+        return self.reduced_embeddings(self.state)
+
+
+    def reduced_embeddings(self, flatten_embeddings):
+        min_len = min(arr.size for arr in flatten_embeddings)
+
+        trunk_rows = [arr[:min_len] for arr in flatten_embeddings]
+        M = np.stack(trunk_rows, axis=0)
+
+        U, S, Vt = np.linalg.svd(M, full_matrices=False)
+
+        n_components = self.n_components
+        if n_components is None or n_components > S.size:
+            n_components = S.size
+
+        top_k_vectors = Vt[:n_components, :]
+        
+        result_vector = top_k_vectors.flatten()
+        return result_vector

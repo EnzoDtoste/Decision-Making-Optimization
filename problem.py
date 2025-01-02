@@ -1,11 +1,12 @@
 from abc import ABC
 from choice import Choice
+from choiceParameters import ChoiceParameters
 
 class Problem(ABC):
-    def __init__(self, choice, getChoiceParameters):
+    def __init__(self, choice, choiceParameters : ChoiceParameters):
         super().__init__()
         self.choice : Choice = choice
-        self.getChoiceParameters = getChoiceParameters
+        self.choiceParameters = choiceParameters
         self.embeddings = []
 
     def reset_embeddings(self):
@@ -22,7 +23,7 @@ class Problem(ABC):
         choices = self.order_choices(choices, *params)
         embedding = self.get_current_embedding(*params)
         self.embeddings.append(embedding)
-        return choices[self.choice(len(choices), self.getChoiceParameters(embedding))]
+        return choices[self.choice(len(choices), self.choiceParameters(embedding))]
 
     def order_choices(self, choices, *params) -> list:
         pass

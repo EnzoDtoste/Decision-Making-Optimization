@@ -6,8 +6,8 @@ import numpy as np
 from sortedcontainers import SortedDict
 
 class MemoryGame(Problem):
-    def __init__(self, choice : Choice, getChoiceParameters, prob_forget, N, limit):
-        super().__init__(choice, getChoiceParameters)
+    def __init__(self, choice : Choice, choiceParameters, prob_forget, N, limit):
+        super().__init__(choice, choiceParameters)
         self.prob_forget = prob_forget
         self.N = N
         self.limit = limit
@@ -107,6 +107,7 @@ class MemoryGame(Problem):
 
     def run(self, cards):
         self.reset_embeddings()
+        self.choiceParameters.reset_state()
 
         num_cards = len(cards) // 2
         discovered = [False] * self.N
