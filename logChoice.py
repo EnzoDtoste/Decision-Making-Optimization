@@ -22,7 +22,8 @@ class LogChoice(Choice):
                 return n - 1
             return min(int(n * (exp ** np.random.random() - 1) / (exp - 1)), n - 1)
         else:
-            return int(a / (b * (np.random.random() - 1)) + a / b)
+            r = np.random.random()
+            return int(a / (b * (r - 1)) + a / b)
     
     def adjust_zero(self, value):
         if abs(value) < self.epsilon:
@@ -35,6 +36,6 @@ class LogChoice(Choice):
         if self.size == Size.ALWAYS_FINITE:
             return np.array([[max(a, self.epsilon), self.adjust_zero(b)]])
         elif self.size == Size.ALWAYS_INFINITE:
-            return np.array([[max(a, 0), min(b, self.epsilon)]])
+            return np.array([[max(a, 0), min(b, -self.epsilon)]])
         else:
-            return np.array([[max(a, self.epsilon), min(b, self.epsilon)]])
+            return np.array([[max(a, self.epsilon), min(b, -self.epsilon)]])
