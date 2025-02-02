@@ -1,6 +1,6 @@
-from choiceParameters import ChoiceParameters
+from ..choiceParameters import ChoiceParameters
 import numpy as np
-from pso import pso_solve
+from .pso import pso_solve
 
 class PSOParameters(ChoiceParameters):
     params = None
@@ -16,7 +16,7 @@ class PSOParameters(ChoiceParameters):
                                             , init_positions
                                             , init_velocities
                                             , fitness
-                                            , lambda p: constraints(p[0][0], p[0][1])
+                                            , lambda p: np.array([constraints(p[0])])
                                             , lambda score: False
                                             , False
                                             )

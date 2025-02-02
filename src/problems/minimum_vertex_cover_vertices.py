@@ -1,19 +1,19 @@
-from problem import Problem
+from ..problem import Problem
 import numpy as np
 
 class MinimumVertexCoverVertices(Problem):
     def __init__(self, choice, choiceParameters):
         super().__init__(choice, choiceParameters)
 
-    def get_current_embedding(self, *params):
+    def get_current_embedding(self, params):
         map, _ = params
-        return map
+        return np.array(map)
 
-    def get_choices(self, *params):
+    def get_choices(self, params):
         _, nodes = params
         return nodes
 
-    def order_choices(self, choices, *params):
+    def order_choices(self, choices, params):
         map, _ = params
         return sorted(choices, key=lambda node: sum(map[node]), reverse=True)
 
@@ -28,7 +28,7 @@ class MinimumVertexCoverVertices(Problem):
         map = [[1 if col in graph[row] or col == row else 0 for col in nodes] for row in nodes]
 
         while not all(dominated_mask):
-            node = self.select_choice(map, nodes)
+            node = self.select_choice([map, nodes])
             nodes.remove(node)
             dominating_set.add(node)
             map[node][node] = 0

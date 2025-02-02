@@ -1,7 +1,6 @@
-from problem import Problem
-from choice import Choice
+from ..problem import Problem
+from ..choice import Choice
 import random
-import math
 import numpy as np
 
 def random_players(players, count, main_player):
@@ -54,18 +53,18 @@ class Domino(Problem):
             return total
         return [f for f in total if f[0] in head or f[1] in head]
 
-    def get_current_embedding(self, *params):
+    def get_current_embedding(self, params):
         head, hand, _, table = params
 
         nhd = np.array([-1, -1]).flatten() if head is None else np.array(head).flatten()
         nh = np.array([[hand[i][0], hand[i][1]] if i < len(hand) else [-1, -1] for i in range(len(table))]).flatten()
         return np.concatenate((nhd, nh, np.array(table).flatten()))
 
-    def order_choices(self, choices, *params):
+    def order_choices(self, choices, params):
         head, _, order, table = params
         return order(choices, table)
 
-    def get_choices(self, *params):
+    def get_choices(self, params):
         head, hand, _, _ = params
         return self.get_available_plays(hand, head)
 
@@ -99,7 +98,7 @@ class Domino(Problem):
                 current_player = 0
 
             if index_main_player == current_player:
-                play = self.select_choice(head, hands[current_player], players[current_player], table)
+                play = self.select_choice([head, hands[current_player], players[current_player], table])
             else:
                 plays = self.get_available_plays(hands[current_player], head)
                 if len(plays) > 0:
@@ -143,9 +142,9 @@ class Domino(Problem):
                         table[play[1]][play[0]] = -(current_player + 1)
 
 
-            try:
+            if play in hands[current_player]:
                 hands[current_player].remove(play)
-            except:
+            else:
                 hands[current_player].remove((play[1], play[0]))
 
             if len(hands[current_player]) == 0:
