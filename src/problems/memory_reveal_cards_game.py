@@ -1,5 +1,5 @@
-from problem import Problem
-from choice import Choice
+from ..problem import Problem
+from ..choice import Choice
 import random
 import math
 import numpy as np
@@ -14,11 +14,11 @@ class MemoryGame(Problem):
         self.cols = math.gcd(int(math.sqrt(N)), N)
         self.rows = N // self.cols
 
-    def get_current_embedding(self, *params):
+    def get_current_embedding(self, params):
         B, _ = params
-        return B
+        return np.array(B)
 
-    def order_choices(self, choices, *params):
+    def order_choices(self, choices, params):
         B, _ = params
         sorted_dict = SortedDict()
         
@@ -29,7 +29,7 @@ class MemoryGame(Problem):
         choices.reverse()
         return choices
 
-    def get_choices(self, *params):
+    def get_choices(self, params):
         B, discovered = params
         N = len(B)
         plays = []
@@ -44,10 +44,6 @@ class MemoryGame(Problem):
     def obtain_normal_values_truncated(self, N, num_values):
         mu = self.prob_forget * N
         sigma = (self.prob_forget / 2) * N
-        #a = (0 - mu) / sigma 
-        #b = 10
-        #a, b = (0 - mu) / sigma, (N - mu) / sigma
-        #valores = truncnorm.rvs(a, b, loc=mu, scale=sigma, size=num_values)
         valores = np.random.normal(mu, sigma, num_values)
         valores = [max(0, min(v, N)) for v in valores]
         suma_valores = sum(valores)
@@ -59,7 +55,7 @@ class MemoryGame(Problem):
         
         return valores
 
-    def limitacion(self, B, discovered):
+    def limitation(self, B, discovered):
         N, num_cartas = B.shape
         newB = np.zeros((N, num_cartas))
 
@@ -116,9 +112,9 @@ class MemoryGame(Problem):
 
         moves = 0
         while not all(discovered):
-            B = self.limitacion(B, discovered)
+            B = self.limitation(B, discovered)
 
-            i, j = self.select_choice(B, discovered)
+            i, j = self.select_choice([B, discovered])
 
             c_i = cards[i]
             c_j = cards[j]

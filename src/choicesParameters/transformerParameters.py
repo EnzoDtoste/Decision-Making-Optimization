@@ -1,13 +1,14 @@
-from choiceParameters import ChoiceParameters
-from transformer import TransformerModel, train, evaluate
+from ..choiceParameters import ChoiceParameters
+from .transformer import TransformerModel, train, evaluate
 import numpy as np
 from sklearn.model_selection import train_test_split
 
 class TransformerParameters(ChoiceParameters):
-    def __init__(self, dmodel=128, nhead=8, num_layers=2):
+    def __init__(self, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
         super().__init__()
         self.model_size = 128
         self.model = TransformerModel(d_model=dmodel, nhead=nhead, num_layers=num_layers)
+        self.remember_previous_internal_state = remember_previous_internal_state
 
     def get_state_after_embedding(self, embedding):
         pass
@@ -26,17 +27,17 @@ class TransformerParameters(ChoiceParameters):
 
         return newX
     
-    def train(self, X, Y):
+    def train(self, X, Y, epochs = 10):
         X = self.prepare_data(X)
 
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
-        train(self.model, X_train, Y_train)
+        train(self.model, X_train, Y_train, epochs)
 
         return evaluate(self.model, X_test, Y_test)
 
 class TransformerParametersSequential(TransformerParameters):
-    def __init__(self, dmodel=128, nhead=8, num_layers=2):
-        super().__init__(dmodel, nhead, num_layers)
+    def __init__(self, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+        super().__init__(dmodel, nhead, num_layers, remember_previous_internal_state)
         self.state = None
         self.separator = 110901
 
@@ -44,7 +45,7 @@ class TransformerParametersSequential(TransformerParameters):
         self.state = None
 
     def get_state_after_embedding(self, embedding):
-        if self.state is None:
+        if self.state is None or not self.remember_previous_internal_state:
             self.state = embedding.flatten()
         else:
             self.state = np.concatenate((self.state, np.array([self.separator]), embedding.flatten()))
@@ -64,8 +65,8 @@ class TransformerParametersSequential(TransformerParameters):
             
 
 class TransformerParametersSVD(TransformerParameters):
-    def __init__(self, n_componentes=None, dmodel=128, nhead=8, num_layers=2):
-        super().__init__(dmodel, nhead, num_layers)
+    def __init__(self, n_componentes=None, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+        super().__init__(dmodel, nhead, num_layers, remember_previous_internal_state)
         self.state = []
         self.n_components = n_componentes
 
@@ -76,7 +77,10 @@ class TransformerParametersSVD(TransformerParameters):
         return self.reduced_embeddings([e.flatten() for e in list_embedding])
         
     def get_state_after_embedding(self, embedding):
-        self.state.append(embedding.flatten())
+        if self.remember_previous_internal_state:
+            self.state.append(embedding.flatten())
+        else:
+            self.state = [embedding.flatten()]
         return self.reduced_embeddings(self.state)
 
 

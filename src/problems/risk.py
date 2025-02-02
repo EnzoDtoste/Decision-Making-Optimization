@@ -1,19 +1,18 @@
-from problem import Problem
-from choice import Choice
+from ..problem import Problem
 import random
-import math
+import numpy as np
 
 class RiskGame(Problem):
     def __init__(self, choice, choiceParameters, rounds):
         super().__init__(choice, choiceParameters)
         self.rounds = rounds
 
-    def get_current_embedding(self, *params):
-        wol = params
-        return wol
+    def get_current_embedding(self, params):
+        wol = params[0]
+        return wol#np.array(wol)
 
-    def select_choice(self, *params):
-        embedding = self.get_current_embedding(*params)
+    def select_choice(self, params):
+        embedding = self.get_current_embedding(params)
         self.embeddings.append(embedding)
         return self.choice(None, self.choiceParameters(embedding))
     
