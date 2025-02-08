@@ -9,7 +9,7 @@ class RiskGame(Problem):
 
     def get_current_embedding(self, params):
         wol = params[0]
-        return wol#np.array(wol)
+        return np.array(wol)
 
     def select_choice(self, params):
         embedding = self.get_current_embedding(params)
