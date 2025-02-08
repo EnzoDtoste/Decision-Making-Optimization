@@ -4,10 +4,10 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 class TransformerParameters(ChoiceParameters):
-    def __init__(self, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+    def __init__(self, num_output, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
         super().__init__()
         self.model_size = 128
-        self.model = TransformerModel(d_model=dmodel, nhead=nhead, num_layers=num_layers)
+        self.model = TransformerModel(num_output, d_model=dmodel, nhead=nhead, num_layers=num_layers)
         self.remember_previous_internal_state = remember_previous_internal_state
 
     def get_state_after_embedding(self, embedding):
@@ -36,8 +36,8 @@ class TransformerParameters(ChoiceParameters):
         return evaluate(self.model, X_test, Y_test)
 
 class TransformerParametersSequential(TransformerParameters):
-    def __init__(self, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
-        super().__init__(dmodel, nhead, num_layers, remember_previous_internal_state)
+    def __init__(self, num_output, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+        super().__init__(num_output, dmodel, nhead, num_layers, remember_previous_internal_state)
         self.state = None
         self.separator = 110901
 
@@ -65,8 +65,8 @@ class TransformerParametersSequential(TransformerParameters):
             
 
 class TransformerParametersSVD(TransformerParameters):
-    def __init__(self, n_componentes=None, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
-        super().__init__(dmodel, nhead, num_layers, remember_previous_internal_state)
+    def __init__(self, num_output, n_componentes=None, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+        super().__init__(num_output, dmodel, nhead, num_layers, remember_previous_internal_state)
         self.state = []
         self.n_components = n_componentes
 

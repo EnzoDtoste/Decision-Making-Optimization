@@ -25,14 +25,14 @@ class PositionalEncoding(nn.Module):
         return x
 
 class TransformerModel(nn.Module):
-    def __init__(self, d_model=128, nhead=8, num_layers=2):
+    def __init__(self, num_output, d_model=128, nhead=8, num_layers=2):
         super(TransformerModel, self).__init__()
         self.d_model = d_model
         self.input_linear = nn.Linear(1, d_model)
         self.pos_encoder = PositionalEncoding(d_model)
         encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
-        self.output_layer = nn.Linear(d_model, 2)
+        self.output_layer = nn.Linear(d_model, num_output)
 
     def forward(self, src, src_key_padding_mask=None):
         src = src.unsqueeze(-1)
