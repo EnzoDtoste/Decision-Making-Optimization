@@ -13,6 +13,7 @@ class MemoryGame(Problem):
         self.limit = limit
         self.cols = math.gcd(int(math.sqrt(N)), N)
         self.rows = N // self.cols
+        self.verbose = False
 
     def get_current_embedding(self, params):
         B, _ = params
@@ -61,7 +62,7 @@ class MemoryGame(Problem):
 
         for i in range(N):
             if not discovered[i]:
-                fila = i // self.rows
+                fila = (i + 1) // self.rows
                 columna = i % self.cols
 
                 for j in range(num_cartas):
@@ -108,18 +109,32 @@ class MemoryGame(Problem):
         num_cards = len(cards) // 2
         discovered = [False] * self.N
 
-        B = np.ones((self.N, num_cards)) / self.N
+        B = np.ones((self.N, num_cards)) / num_cards
 
         moves = 0
         while not all(discovered):
+            if self.verbose:
+                print(B)
             B = self.limitation(B, discovered)
 
+            for k in range(self.N):
+                total = sum(B[k, :])
+                if total > 0:
+                    B[k, :] /= total
+
+            if self.verbose:
+                print(B)
+
             i, j = self.select_choice([B, discovered])
+            if self.verbose:
+                print(i, j)
 
             c_i = cards[i]
             c_j = cards[j]
             
             if c_i == c_j:
+                if self.verbose:
+                    print("assert")
                 discovered[i] = True
                 discovered[j] = True
 
@@ -129,20 +144,21 @@ class MemoryGame(Problem):
                 B[:, c_i] = 0
                 B[:, c_j] = 0
             else:
+                if self.verbose:
+                    print('fail')
                 B[i, :] = 0
                 B[i, c_i] = 1
                 B[j, :] = 0
                 B[j, c_j] = 1
 
+            for k in range(self.N):
+                total = sum(B[k, :])
+                if total > 0:
+                    B[k, :] /= total
+
             moves += 1
 
             if moves >= self.limit:
                 break
-            
-            for k in range(num_cards):
-                total = sum(B[:, k])
-                if total > 0:
-                    B[:, k] /= total
-            
         
         return moves
