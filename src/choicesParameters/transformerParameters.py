@@ -72,10 +72,11 @@ class TransformerParametersSequential(TransformerParameters):
             
 
 class TransformerParametersSVD(TransformerParameters):
-    def __init__(self, num_output, n_componentes=None, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
+    def __init__(self, num_output, n_componentes=None, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True, truncate_embeddings=True):
         super().__init__(num_output, dmodel, nhead, num_layers, remember_previous_internal_state)
         self.state = []
         self.n_components = n_componentes
+        self.truncate_embeddings = truncate_embeddings
 
     def reset_state(self):
         self.state = []
@@ -91,8 +92,8 @@ class TransformerParametersSVD(TransformerParameters):
         return self.reduced_embeddings(self.state)
 
 
-    def reduced_embeddings(self, flatten_embeddings, truncate=True):
-        if truncate:
+    def reduced_embeddings(self, flatten_embeddings):
+        if self.truncate_embeddings:
             min_len = min(arr.size for arr in flatten_embeddings)
             trunk_rows = [arr[:min_len] for arr in flatten_embeddings]
             M = np.stack(trunk_rows, axis=0)
