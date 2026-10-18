@@ -1,14 +1,17 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 class Choice(ABC):
     def __init__(self):
         super().__init__()
 
-    def count_params(self):
-        pass
+    @abstractmethod
+    def count_params(self) -> int:
+        ...
 
-    def __call__(self, n, params):
-        pass
+    @abstractmethod
+    def __call__(self, n, params) -> int:
+        ...
 
-    def apply_constraints(self, params):
-        pass
+    @abstractmethod
+    def apply_constraints(self, params) -> list[float]:
+        ...

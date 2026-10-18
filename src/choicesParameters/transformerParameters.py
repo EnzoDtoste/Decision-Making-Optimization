@@ -6,15 +6,15 @@ from sklearn.model_selection import train_test_split
 class TransformerParameters(ChoiceParameters):
     def __init__(self, num_output, dmodel=128, nhead=8, num_layers=2, remember_previous_internal_state=True):
         super().__init__()
-        self.model_size = 128
+        self.model_size = dmodel
         self.model = TransformerModel(num_output, d_model=dmodel, nhead=nhead, num_layers=num_layers)
         self.remember_previous_internal_state = remember_previous_internal_state
 
-    def get_state_after_embedding(self, embedding):
-        pass
+    def get_state_after_embedding(self, embedding) -> np.ndarray:
+        ...
 
-    def get_state_for_list(self, list_embedding):
-        pass
+    def get_state_for_list(self, list_embedding) -> np.ndarray:
+        ...
 
     def __call__(self, embedding):
         return evaluate(self.model, [self.get_state_after_embedding(embedding).flatten()])[0]
@@ -53,15 +53,22 @@ class TransformerParametersSequential(TransformerParameters):
         return self.state
 
     def get_state_for_list(self, list_embedding):
-        joined = None
+        if len(list_embedding) == 0:
+            raise ValueError("The list of embeddings cannot be empty")
 
-        for embedding in list_embedding:
-            if joined is None:
-                joined = embedding.flatten()
-            else:
-                joined = np.concatenate((joined, np.array([self.separator]), embedding.flatten()))
+        parts = []
 
-        return joined
+        for i, embedding in enumerate(list_embedding):
+            if i > 0:
+                parts.append(
+                    np.array([self.separator], dtype=np.float32)
+                )
+
+            parts.append(
+                np.asarray(embedding, dtype=np.float32).reshape(-1)
+            )
+
+        return np.concatenate(parts)
             
 
 class TransformerParametersSVD(TransformerParameters):
@@ -84,11 +91,22 @@ class TransformerParametersSVD(TransformerParameters):
         return self.reduced_embeddings(self.state)
 
 
-    def reduced_embeddings(self, flatten_embeddings):
-        min_len = min(arr.size for arr in flatten_embeddings)
+    def reduced_embeddings(self, flatten_embeddings, truncate=True):
+        if truncate:
+            min_len = min(arr.size for arr in flatten_embeddings)
+            trunk_rows = [arr[:min_len] for arr in flatten_embeddings]
+            M = np.stack(trunk_rows, axis=0)
+        else:
+            vectors = [
+                np.asarray(arr, dtype=np.float64).ravel()
+                for arr in flatten_embeddings
+            ]
 
-        trunk_rows = [arr[:min_len] for arr in flatten_embeddings]
-        M = np.stack(trunk_rows, axis=0)
+            max_len = max(arr.size for arr in vectors)
+            M = np.zeros((len(vectors), max_len), dtype=np.float64)
+
+            for i, arr in enumerate(vectors):
+                M[i, :arr.size] = arr
 
         U, S, Vt = np.linalg.svd(M, full_matrices=False)
 
@@ -96,7 +114,9 @@ class TransformerParametersSVD(TransformerParameters):
         if n_components is None or n_components > S.size:
             n_components = S.size
 
-        top_k_vectors = Vt[:n_components, :]
+        top_k_vectors = (
+            S[:n_components, None] * Vt[:n_components, :]
+        )
         
         result_vector = top_k_vectors.flatten()
         return result_vector

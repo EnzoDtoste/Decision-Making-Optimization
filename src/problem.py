@@ -13,12 +13,12 @@ class Problem(ABC):
         self.embeddings = []
 
     def get_current_embedding(self, params):
-        pass
+        ...
 
     def select_choice(self, params):
         choices = self.get_choices(params)
         if len(choices) == 0:
-            return
+            raise ValueError("No choices available")
 
         choices = self.order_choices(choices, params)
         embedding = self.get_current_embedding(params)
@@ -26,10 +26,10 @@ class Problem(ABC):
         return choices[self.choice(len(choices), self.choiceParameters(embedding))]
 
     def order_choices(self, choices, params) -> list:
-        pass
+        ...
 
     def get_choices(self, params) -> list:
-        pass
+        ...
 
     def run(self, params):
-        pass
+        ...
